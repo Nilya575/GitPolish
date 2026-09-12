@@ -20,7 +20,7 @@ const [passwordMessage, setPasswordMessage] = useState('');
 
   const fetchProfile = async () => {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:5000/api/profile', {
+    const response = await axios.get('https://gitpolish-backend.onrender.com/api/profile', {
       headers: { Authorization: `Bearer ${token}` }
     });
     setName(response.data.name);
@@ -31,7 +31,7 @@ const [passwordMessage, setPasswordMessage] = useState('');
 
   const fetchStats = async () => {
     const token = localStorage.getItem('token');
-    const response = await axios.get('http://localhost:5000/api/history', {
+    const response = await axios.get('https://gitpolish-backend.onrender.com/api/history', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const history = response.data;
@@ -48,7 +48,7 @@ const [passwordMessage, setPasswordMessage] = useState('');
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(
-        'http://localhost:5000/api/profile',
+        'https://gitpolish-backend.onrender.com/api/profile',
         { name, bio },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -64,7 +64,7 @@ const [passwordMessage, setPasswordMessage] = useState('');
   try {
     const token = localStorage.getItem('token');
     await axios.put(
-      'http://localhost:5000/api/change-password',
+      'https://gitpolish-backend.onrender.com/api/change-password',
       { currentPassword, newPassword },
       { headers: { Authorization: `Bearer ${token}` } }
     );

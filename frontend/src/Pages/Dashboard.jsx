@@ -7,7 +7,7 @@ function Dashboard() {
 const [socket, setSocket] = useState(null);
 
 useEffect(() => {
-  const newSocket = io('http://localhost:5000');
+  const newSocket = io('https://gitpolish-backend.onrender.com');
   setSocket(newSocket);
 
   newSocket.on('progress', (message) => {
@@ -52,7 +52,7 @@ useEffect(() => {
     const token = localStorage.getItem('token');
 
     const response = await axios.get(
-      'http://localhost:5000/api/analyze-repo',
+      'https://gitpolish-backend.onrender.com/api/analyze-repo',
       {
         params: { downloadUrl, socketId: socket?.id },
         headers: { Authorization: `Bearer ${token}` }

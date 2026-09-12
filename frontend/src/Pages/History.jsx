@@ -14,7 +14,7 @@ function History() {
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:5000/api/history', {
+      const response = await axios.get('https://gitpolish-backend.onrender.com/api/history', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistory(response.data);
@@ -29,7 +29,7 @@ function History() {
     if (!window.confirm('Sach me delete karna hai?')) return;
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:5000/api/history/${id}`, {
+      await axios.delete(`https://gitpolish-backend.onrender.com/api/history/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistory(history.filter((item) => item._id !== id));

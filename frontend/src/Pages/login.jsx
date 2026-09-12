@@ -13,7 +13,7 @@ function Login() {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/login', {
+      const response = await axios.post('https://gitpolish-backend.onrender.com/api/login', {
         email,
         password
       });
