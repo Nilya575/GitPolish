@@ -1,15 +1,16 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './Pages/login';
-import Signup from './Pages/Signup';
-import Dashboard from './Pages/Dashboard';
-import History from './Pages/History';
-import Profile from './Pages/Profile';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import History from './pages/History';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/dashboard" element={
