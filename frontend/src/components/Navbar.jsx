@@ -16,6 +16,7 @@ function Navbar() {
         <Link to="/dashboard">Dashboard</Link>
         <Link to="/history">History</Link>
         <Link to="/profile">Profile</Link>
+        <Link to="/compare">Compare</Link>
       </div>
       
       {userName && (

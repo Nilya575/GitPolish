@@ -13,7 +13,9 @@ function Profile() {
   const [currentPassword, setCurrentPassword] = useState('');
 const [newPassword, setNewPassword] = useState('');
 const [passwordMessage, setPasswordMessage] = useState('');
-  useEffect(() => {
+ const [avatar, setAvatar] = useState('');
+const [githubUsername, setGithubUsername] = useState('');
+useEffect(() => {
     fetchProfile();
     fetchStats();
   }, []);
@@ -27,6 +29,8 @@ const [passwordMessage, setPasswordMessage] = useState('');
     setEmail(response.data.email);
     setBio(response.data.bio || '');
     setCreatedAt(response.data.createdAt);
+    setAvatar(response.data.avatar || localStorage.getItem('userAvatar') || '');
+  setGithubUsername(response.data.githubUsername || localStorage.getItem('githubUsername') || '');
   };
 
   const fetchStats = async () => {
@@ -82,14 +86,32 @@ const [passwordMessage, setPasswordMessage] = useState('');
       <div className="container">
         <div className="profile-header">
           
+  {avatar ? (
   <img 
-  src={`https://api.dicebear.com/7.x/initials/svg?seed=${name || 'U'}&backgroundColor=6c5ce7`}
-  alt="avatar"
-  className="profile-avatar-img"
-/>
+    src={avatar}
+    alt="GitHub Avatar"
+    className="profile-avatar-img"
+  />
+) : (
+  <img 
+    src={`https://api.dicebear.com/7.x/initials/svg?seed=${name || 'U'}&backgroundColor=6c5ce7`}
+    alt="avatar"
+    className="profile-avatar-img"
+  />
+)}
           <div>
             <h2 style={{ marginBottom: '4px' }}>{name}</h2>
             <p style={{ color: '#636e72', fontSize: '14px' }}>{email}</p>
+            {githubUsername && (
+  <a 
+    href={`https://github.com/${githubUsername}`}
+    target="_blank"
+    rel="noreferrer"
+    style={{ fontSize: '13px', color: '#6c5ce7' }}
+  >
+    🐙 @{githubUsername}
+  </a>
+)}
           </div>
         </div>
 

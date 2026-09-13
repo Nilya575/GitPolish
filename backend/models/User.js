@@ -16,7 +16,8 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: ''
-  }
+  },
+  githubId: { type: String, default: null }
 }, { timestamps: true });
 const User = mongoose.model('User', userSchema);
 module.exports = User;

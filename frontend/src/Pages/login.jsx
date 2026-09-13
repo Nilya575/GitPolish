@@ -49,6 +49,26 @@ function Login() {
         />
         <button type="submit">Login</button>
       </form>
+      <div style={{ textAlign: 'center', margin: '15px 0' }}>
+  <p style={{ color: '#636e72', fontSize: '13px', marginBottom: '10px' }}>
+    --- OR ---
+  </p>
+  <button
+    type="button"
+    onClick={() => window.location.href = 'https://gitpolish-backend.onrender.com/api/auth/github'}
+    style={{
+      background: '#24292e',
+      color: 'white',
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '10px'
+    }}
+  >
+    🐙 Login with GitHub
+  </button>
+</div>
       <p style={{ marginTop: '15px', textAlign: 'center', fontSize: '14px' }}>
         Don't have an account? <Link to="/signup">Signup</Link>
       </p>

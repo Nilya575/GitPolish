@@ -5,7 +5,8 @@ import Dashboard from './Pages/Dashboard';
 import History from './Pages/History';
 import Profile from './Pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import Compare from './Pages/Compare';
+import AuthCallback from './Pages/AuthCallback';
 function App() {
   return (
     <BrowserRouter>
@@ -13,7 +14,9 @@ function App() {
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/compare" element={<ProtectedRoute><Compare /></ProtectedRoute>} />
         <Route path="/dashboard" element={
+          
           <ProtectedRoute><Dashboard /></ProtectedRoute>
         } />
         <Route path="/history" element={
@@ -22,6 +25,7 @@ function App() {
         <Route path="/profile" element={
           <ProtectedRoute><Profile /></ProtectedRoute>
         } />
+        <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     </BrowserRouter>
   );

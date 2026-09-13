@@ -1,6 +1,9 @@
 require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cors = require('cors');
+const passport = require('passport');
+const GitHubStrategy = require('passport-github2').Strategy;
+const session = require('express-session');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const authMiddleware = require('./Middleware/authMiddleware');
 const AnalysisHistory = require('./models/AnalysisHistory');
@@ -26,6 +29,65 @@ io.on('connection', (socket) => {
   });
 });
 app.use(cors());
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => {
+  done(null, user._id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
+
+passport.use(new GitHubStrategy({
+  clientID: process.env.GITHUB_CLIENT_ID,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  callbackURL: 'https://gitpolish-backend.onrender.com/api/auth/github/callback'
+},
+async (accessToken, refreshToken, profile, done) => {
+  try {
+    // Pehle githubId se dhundho
+    let user = await User.findOne({ githubId: profile.id });
+    
+    if (user) {
+      // Already exists — seedha login
+      return done(null, user);
+    }
+
+    // Email se dhundho (agar pehle normal signup kiya tha)
+    const email = profile.emails?.[0]?.value || `github_${profile.id}@gitpolish.com`;
+    user = await User.findOne({ email });
+
+    if (user) {
+      // Normal account mila — githubId link kar do
+      user.githubId = profile.id;
+      await user.save();
+      return done(null, user);
+    }
+
+    // Bilkul naya user banao
+    user = new User({
+      name: profile.displayName || profile.username,
+      email: email,
+      password: `github_${profile.id}_oauth`,
+      bio: profile._json.bio || '',
+      githubId: profile.id
+    });
+    await user.save();
+    return done(null, user);
+
+  } catch (error) {
+    return done(error, null);
+  }
+}));
 app.use(express.json());
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -325,10 +387,7 @@ Code: ${codeContent}`;
     console.log(error);
     res.status(500).json({ error: 'Analysis nahi ho paya' });
   }
-});
-
-   
-    
+});   
 
 app.get('/api/test-analyze', async (req, res) => {
   try {
@@ -518,5 +577,27 @@ app.put('/api/change-password', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Password change fail ho gaya' });
   }
 });
+// Route 1: GitHub pe redirect karo
+app.get('/api/auth/github',
+  passport.authenticate('github', { scope: ['user:email'] })
+);
+
+// Route 2: GitHub wapas bhejega yahan
+app.get('/api/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  async (req, res) => {
+    const token = jwt.sign(
+      { userId: req.user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    // Avatar aur githubUsername bhi bhejo
+    const avatar = req.user.avatar || '';
+    const githubUsername = req.user.githubUsername || '';
+    
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&name=${encodeURIComponent(req.user.name)}&avatar=${encodeURIComponent(avatar)}&githubUsername=${encodeURIComponent(githubUsername)}`);
+  }
+);
 server.listen(PORT, ()=>{ console.log(`server chal raha hai port ${PORT} pe`);
 });
