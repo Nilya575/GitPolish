@@ -5,7 +5,11 @@ import { io } from 'socket.io-client';
 function Dashboard() {
   const [progressMessages, setProgressMessages] = useState([]);
 const [socket, setSocket] = useState(null);
-
+const [repos, setRepos] = useState([]);
+const [selectedRepo, setSelectedRepo] = useState(null);
+const [files, setFiles] = useState([]);
+const [showRepoSelector, setShowRepoSelector] = useState(false);
+const [currentPath, setCurrentPath] = useState('');
 useEffect(() => {
   const newSocket = io('https://gitpolish-backend.onrender.com');
   setSocket(newSocket);
@@ -21,6 +25,7 @@ useEffect(() => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [recentUrls, setRecentUrls] = useState(JSON.parse(localStorage.getItem('recentUrls')) || []
+
 );
   const formatExplanation = (text) => {
   // Numbered points se pehle line break daalo (jaise "1. **Title**")
@@ -40,6 +45,49 @@ useEffect(() => {
       </p>
     );
   });
+};
+const fetchRepos = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(
+      'https://gitpolish-backend.onrender.com/api/github/repos',
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setRepos(response.data);
+    setShowRepoSelector(true);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const fetchFiles = async (repo, path = '') => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(
+      `https://gitpolish-backend.onrender.com/api/github/files/${repo.owner.login}/${repo.name}`,
+      {
+        params: { path },
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+    setSelectedRepo(repo);
+    setFiles(response.data);
+    setCurrentPath(path);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const handleFileSelect = (file) => {
+  if (file.type === 'dir') {
+    fetchFiles(selectedRepo, file.path);
+  } else {
+    setDownloadUrl(file.download_url);
+    setShowRepoSelector(false);
+    setFiles([]);
+    setSelectedRepo(null);
+    setCurrentPath('');
+  }
 };
   const handleAnalyze = async (e) => {
   e.preventDefault();
@@ -77,7 +125,59 @@ useEffect(() => {
     <div className="container">
       <h2>GitPolish Dashboard</h2>
 <p className="subtitle">Paste a GitHub raw file URL to get AI-powered code analysis</p>
+{/* GitHub Repo Selector Button */}
+<button 
+  type="button" 
+  onClick={fetchRepos}
+  style={{ 
+    background: '#24292e', 
+    marginBottom: '15px',
+    width: '100%'
+  }}
+>
+  🐙 Browse My GitHub Repos
+</button>
 
+{/* Repo List */}
+{showRepoSelector && !selectedRepo && (
+  <div className="repo-selector">
+    <h4>Select a Repository:</h4>
+    {repos.map((repo) => (
+      <div 
+        key={repo.id} 
+        className="repo-item"
+        onClick={() => fetchFiles(repo)}
+      >
+        📁 {repo.name}
+        <span className="repo-lang">{repo.language}</span>
+      </div>
+    ))}
+  </div>
+)}
+
+{/* Files List */}
+{selectedRepo && files.length > 0 && (
+  <div className="repo-selector">
+    <div className="file-breadcrumb">
+      <span 
+        onClick={() => fetchFiles(selectedRepo, '')}
+        style={{ cursor: 'pointer', color: '#6c5ce7' }}
+      >
+        {selectedRepo.name}
+      </span>
+      {currentPath && <span> / {currentPath}</span>}
+    </div>
+    {files.map((file) => (
+      <div 
+        key={file.sha} 
+        className="repo-item"
+        onClick={() => handleFileSelect(file)}
+      >
+        {file.type === 'dir' ? '📁' : '📄'} {file.name}
+      </div>
+    ))}
+  </div>
+)}
 <form onSubmit={handleAnalyze} className="analyze-form">
   <input
     type="text"

@@ -47,47 +47,67 @@ passport.deserializeUser(async (id, done) => {
   done(null, user);
 });
 
-passport.use(new GitHubStrategy({
-  clientID: process.env.GITHUB_CLIENT_ID,
-  clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: 'https://gitpolish-backend.onrender.com/api/auth/github/callback'
-},
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    // Pehle githubId se dhundho
-    let user = await User.findOne({ githubId: profile.id });
-    
-    if (user) {
-      // Already exists — seedha login
-      return done(null, user);
+passport.use(
+  new GitHubStrategy(
+    {
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL:
+        "https://gitpolish-backend.onrender.com/api/auth/github/callback",
+    },
+
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // 1. GitHub ID se existing user check karo
+        let user = await User.findOne({
+          githubId: profile.id,
+        });
+
+        if (user) {
+          // Existing user
+          user.githubAccessToken = accessToken;
+          await user.save();
+
+          return done(null, user);
+        }
+
+        // 2. GitHub email nikalo
+        const email =
+          profile.emails?.[0]?.value ||
+          `github_${profile.id}@gitpolish.com`;
+
+        // 3. Email se existing normal account check karo
+        user = await User.findOne({ email });
+
+        if (user) {
+          // Existing normal account ko GitHub se link karo
+          user.githubId = profile.id;
+          user.githubAccessToken = accessToken;
+
+          await user.save();
+
+          return done(null, user);
+        }
+
+        // 4. Completely new user
+        user = new User({
+          name: profile.displayName || profile.username,
+          email: email,
+          password: `github_${profile.id}_oauth`,
+          bio: profile._json?.bio || "",
+          githubId: profile.id,
+          githubAccessToken: accessToken,
+        });
+
+        await user.save();
+
+        return done(null, user);
+      } catch (error) {
+        return done(error, null);
+      }
     }
-
-    // Email se dhundho (agar pehle normal signup kiya tha)
-    const email = profile.emails?.[0]?.value || `github_${profile.id}@gitpolish.com`;
-    user = await User.findOne({ email });
-
-    if (user) {
-      // Normal account mila — githubId link kar do
-      user.githubId = profile.id;
-      await user.save();
-      return done(null, user);
-    }
-
-    // Bilkul naya user banao
-    user = new User({
-      name: profile.displayName || profile.username,
-      email: email,
-      password: `github_${profile.id}_oauth`,
-      bio: profile._json.bio || '',
-      githubId: profile.id
-    });
-    await user.save();
-    return done(null, user);
-
-  } catch (error) {
-    return done(error, null);
-  }
-}));
+  )
+);
 app.use(express.json());
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -599,5 +619,37 @@ app.get('/api/auth/github/callback',
     res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&name=${encodeURIComponent(req.user.name)}&avatar=${encodeURIComponent(avatar)}&githubUsername=${encodeURIComponent(githubUsername)}`);
   }
 );
+app.get('/api/github/repos', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const response = await axios.get('https://api.github.com/user/repos', {
+      headers: {
+        Authorization: `token ${user.githubAccessToken}`
+      }
+    });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Repos fetch nahi ho payi' });
+  }
+});
+app.get('/api/github/files/:owner/:repo', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    const { owner, repo } = req.params;
+    const { path = '' } = req.query;
+    
+    const response = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      {
+        headers: {
+          Authorization: `token ${user.githubAccessToken}`
+        }
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Files fetch nahi ho payi' });
+  }
+});
 server.listen(PORT, ()=>{ console.log(`server chal raha hai port ${PORT} pe`);
 });

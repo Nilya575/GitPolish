@@ -605,3 +605,51 @@ a:hover {
   font-size: 13px;
   margin-bottom: 15px;
 }
+.repo-selector {
+  background: #f8f7ff;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+}
+
+.repo-selector h4 {
+  color: #2d3436;
+  margin-bottom: 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.repo-item {
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.repo-item:hover {
+  background: #f0f0ff;
+  color: #6c5ce7;
+}
+
+.repo-lang {
+  font-size: 11px;
+  background: #6c5ce7;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.file-breadcrumb {
+  font-size: 13px;
+  color: #636e72;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}

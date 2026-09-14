@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  githubAccessToken: { type: String, default: null },
   githubId: { type: String, default: null }
 }, { timestamps: true });
 const User = mongoose.model('User', userSchema);
